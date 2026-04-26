@@ -244,6 +244,17 @@ canvas#game{
   font-size:12px;
   color:rgba(255,255,255,.70);
 }
+.rankLine{
+  margin-top:6px;
+  margin-bottom:8px;
+  padding:8px 12px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.82);
+  font-weight:900;
+  letter-spacing:.2px;
+}
 
 .toast{
   position:absolute;

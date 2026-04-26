@@ -24,6 +24,7 @@
   const $finalScore = document.getElementById("finalScore");
   const $finalBest = document.getElementById("finalBest");
   const $gameOverTip = document.getElementById("gameOverTip");
+  const $rankLine = document.getElementById("rankLine");
   const $toast = document.getElementById("toast");
 
   const $startBtn = document.getElementById("startBtn");
@@ -244,6 +245,10 @@
       activeT: 0,
     },
 
+    power: {
+      magnetT: 0,
+    },
+
     input: {
       left: false,
       right: false,
@@ -252,6 +257,8 @@
 
     sloganIndex: 0,
     sloganNextAt: 0,
+
+    sweepCooldown: 0,
   };
 
   const Storage = {
@@ -329,6 +336,7 @@
     barricade: { kind: "barricade", w: 64, h: 62, big: false, score: 0, hazard: true },
     scooter: { kind: "scooter", w: 40, h: 62, big: false, score: 0 },
     erickshaw: { kind: "erickshaw", w: 50, h: 78, big: false, score: 0 },
+    sweep: { kind: "sweep", w: road.w, h: 64, big: true, score: 0, hazard: true },
   };
 
   function laneX(laneIndex, w) {
@@ -351,6 +359,30 @@
     if (d > 2.7) pool.push("truck");
     if (State.event?.type === "vip") pool.push("bus", "bus");
     if (State.event?.type === "festival") pool.push("car", "car", "cow", "barricade");
+
+    // Metro Barrier Sweep: occasional “boss hazard” leaving one safe lane gap
+    if (d > 2.2 && State.sweepCooldown <= 0 && Math.random() < 0.06) {
+      const safeLane = (Math.random() * road.lanes) | 0;
+      const t = obstacleTypes.sweep;
+      obstacles.push({
+        kind: t.kind,
+        x: road.x,
+        y: -t.h - 20,
+        w: road.w,
+        h: t.h,
+        v: State.speed * 1.02,
+        pushedT: 0,
+        pushVX: 0,
+        nearMissed: true, // prevent near-miss scoring on sweeps
+        big: true,
+        hazard: true,
+        safeLane,
+      });
+      State.sweepCooldown = 8.0;
+      toast("METRO BARRIER SWEEP!");
+      Audio.SFX.event();
+      return;
+    }
 
     const kind = pick(pool);
     const t = obstacleTypes[kind];
@@ -378,14 +410,17 @@
   }
 
   function spawnPickup() {
-    const isChai = Math.random() < 0.25;
-    const w = isChai ? 44 : 32;
-    const h = isChai ? 44 : 32;
+    // Mostly coins, sometimes chai, rarely magnet power-up
+    const roll = Math.random();
+    const kind = roll < 0.10 ? "magnet" : roll < 0.32 ? "chai" : "coin";
+
+    const w = kind === "chai" ? 44 : kind === "magnet" ? 40 : 32;
+    const h = kind === "chai" ? 44 : kind === "magnet" ? 40 : 32;
     const lane = (Math.random() * road.lanes) | 0;
     const x = laneX(lane, w) + rand(-8, 8);
     const y = -h - rand(0, 200);
     pickups.push({
-      kind: isChai ? "chai" : "coin",
+      kind,
       x,
       y,
       w,
@@ -490,6 +525,8 @@
 
     State.horn.readyIn = 0;
     State.horn.activeT = 0;
+    State.power.magnetT = 0;
+    State.sweepCooldown = 0;
 
     player.x = W / 2 - player.w / 2;
     player.vx = 0;
@@ -509,6 +546,15 @@
     "Wrong side is a mindset.",
     "Metro pillar slalom.",
   ];
+
+  function rankFor(score) {
+    const s = Math.floor(score);
+    if (s >= 12000) return { title: "Ring Road Legend" };
+    if (s >= 8000) return { title: "Connaught Champ" };
+    if (s >= 5200) return { title: "Dilli Daredevil" };
+    if (s >= 3200) return { title: "Auto Ace" };
+    return { title: "Dilli Driver" };
+  }
 
   function updateSlogan() {
     if (!$slogan) return;
@@ -556,6 +602,7 @@
     $finalScore.textContent = formatInt(State.score);
     $finalBest.textContent = formatInt(State.best);
     $gameOverTip.textContent = reason;
+    if ($rankLine) $rankLine.textContent = `Rank: ${rankFor(State.score).title}`;
   }
 
   // ---------- Input ----------
@@ -624,7 +671,8 @@
   });
 
   $shareBtn.addEventListener("click", async () => {
-    const text = `I survived Delhi traffic for ${formatInt(State.score)} points in Delhi Auto-Rickshaw Rush. Horn OK Please!`;
+    const r = rankFor(State.score);
+    const text = `I survived Delhi traffic for ${formatInt(State.score)} points in Delhi Auto-Rickshaw Rush — Rank: ${r.title}. Horn OK Please!`;
     try {
       await navigator.clipboard.writeText(text);
       toast("Copied brag text");
@@ -709,6 +757,12 @@
     State.comboT = Math.max(0, State.comboT - dt);
     if (State.comboT <= 0) State.nearMissCombo = Math.max(0, State.nearMissCombo - dt * 1.2);
 
+    // power-ups
+    State.power.magnetT = Math.max(0, State.power.magnetT - dt);
+
+    // sweep cooldown
+    State.sweepCooldown = Math.max(0, State.sweepCooldown - dt);
+
     // obstacles
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
@@ -730,6 +784,23 @@
       const p = pickups[i];
       p.spin += dt * 6.0;
       p.y += p.v * dt;
+
+      // magnet effect: pull coins toward the player
+      if (State.power.magnetT > 0 && p.kind === "coin") {
+        const px = player.x + player.w / 2;
+        const py = player.y + player.h / 2;
+        const cx = p.x + p.w / 2;
+        const cy = p.y + p.h / 2;
+        const dx = px - cx;
+        const dy = py - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 260) {
+          const pull = (1 - dist / 260) * 620;
+          p.x += (dx / Math.max(1, dist)) * pull * dt;
+          p.y += (dy / Math.max(1, dist)) * (pull * 0.15) * dt;
+        }
+      }
+
       if (p.y > H + 120) pickups.splice(i, 1);
     }
 
@@ -794,20 +865,46 @@
           Audio.SFX.coin();
           burst(p.x + p.w / 2, p.y + p.h / 2, 16, "rgba(255,210,74,0.95)", 1);
           toast("+120 Coin!");
-        } else {
+        } else if (p.kind === "chai") {
           State.score += 220;
           Audio.SFX.chai();
           burst(p.x + p.w / 2, p.y + p.h / 2, 18, "rgba(217,140,59,0.95)", 1.1);
           toast("Chai Boost! +220");
           // tiny temporary easing: horn faster for a moment
           State.horn.readyIn = Math.max(0, State.horn.readyIn - 0.25);
+        } else if (p.kind === "magnet") {
+          State.power.magnetT = 6.0;
+          State.score += 90;
+          Audio.SFX.event();
+          burst(p.x + p.w / 2, p.y + p.h / 2, 24, "rgba(88,248,255,0.9)", 1.1);
+          toast("MAGNET! Coins come to you");
         }
       }
     }
 
     // obstacles
     for (const o of obstacles) {
-      handleNearMiss(o);
+      if (o.kind !== "sweep") handleNearMiss(o);
+
+      if (o.kind === "sweep") {
+        // Sweep blocks the full road except one safe-lane gap.
+        if (rectsOverlap(player, o)) {
+          const gapPad = 10;
+          const gapW = road.laneW - gapPad * 2;
+          const gapX = road.x + o.safeLane * road.laneW + gapPad;
+          const px = player.x + player.w / 2;
+          const inGap = px >= gapX && px <= gapX + gapW;
+          if (!inGap) {
+            Audio.SFX.hit();
+            State.shake = 0.65;
+            burst(player.x + player.w / 2, player.y + player.h / 2, 54, "rgba(255,59,59,0.92)", 1.25);
+            gameOver("METRO BARRIER said: 'No entry'.");
+            return;
+          }
+        }
+        continue;
+      }
+
       if (rectsOverlap(player, o)) {
         Audio.SFX.hit();
         State.shake = 0.55;
@@ -1055,6 +1152,55 @@
       if (o.kind === "barricade" && drawArt("barricade", x - 12, y - 14, w + 24, h + 26)) return;
     }
 
+    if (o.kind === "sweep") {
+      // “Metro barrier” across road, with one safe lane gap
+      const gapPad = 10;
+      const gapW = road.laneW - gapPad * 2;
+      const gapX = road.x + o.safeLane * road.laneW + gapPad;
+
+      ctx.save();
+      // base bar
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      drawRoundedRect(x + 6, y + 10, w - 12, h - 18, 14);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.55)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // stripes
+      ctx.fillStyle = "rgba(255,79,216,0.85)";
+      for (let i = 0; i < 7; i++) ctx.fillRect(x + 14 + i * 46, y + 26, 22, 10);
+      ctx.fillStyle = "rgba(255,210,74,0.85)";
+      for (let i = 0; i < 7; i++) ctx.fillRect(x + 28 + i * 46, y + 44, 22, 10);
+
+      // “cut out” safe gap
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      drawRoundedRect(gapX, y + 12, gapW, h - 22, 12);
+      ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+
+      // label above the gap
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      drawRoundedRect(gapX + 4, y + 14, gapW - 8, 18, 10);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.font = "900 10px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("SAFE LANE", gapX + gapW / 2, y + 23);
+
+      // METRO text
+      ctx.fillStyle = "rgba(0,0,0,0.60)";
+      ctx.font = "900 12px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("METRO BARRIER", x + w / 2, y + h - 18);
+
+      ctx.restore();
+      return;
+    }
+
     if (o.kind === "car") {
       ctx.fillStyle = palette.car;
       drawRoundedRect(x, y + 8, w, h - 10, 12);
@@ -1203,6 +1349,28 @@
       ctx.beginPath();
       ctx.ellipse(x + w / 2, y + h / 2, w * 0.34 + wob, h * 0.28, 0, 0, Math.PI * 2);
       ctx.stroke();
+    } else if (p.kind === "magnet") {
+      // magnet icon (simple)
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2, y + h - 4, w * 0.40, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "rgba(88,248,255,0.92)";
+      ctx.beginPath();
+      ctx.arc(x + w / 2, y + h / 2, w * 0.28, Math.PI * 0.10, Math.PI * 0.90);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,79,216,0.86)";
+      ctx.beginPath();
+      ctx.arc(x + w / 2, y + h / 2, w * 0.28, Math.PI * 1.10, Math.PI * 1.90);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,0.80)";
+      ctx.font = "900 10px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("MAG", x + w / 2, y + h / 2);
     } else {
       // chai cup
       ctx.fillStyle = "rgba(0,0,0,0.25)";
