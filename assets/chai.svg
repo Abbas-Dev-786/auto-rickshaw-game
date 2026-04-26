@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#EDEDED" stop-opacity=".95"/>
+    </linearGradient>
+    <linearGradient id="tea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3B46C"/>
+      <stop offset="1" stop-color="#D98C3B"/>
+    </linearGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="2" flood-color="#000" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <ellipse cx="64" cy="112" rx="30" ry="7" fill="#000" opacity=".18"/>
+  <rect x="34" y="30" width="56" height="70" rx="18" fill="url(#cup)" stroke="#0E0F15" stroke-width="5" filter="url(#sh)"/>
+  <rect x="40" y="46" width="44" height="44" rx="14" fill="url(#tea)" opacity=".95"/>
+  <path d="M90 44c16 2 22 18 8 28" fill="none" stroke="#0E0F15" stroke-width="5" stroke-linecap="round"/>
+  <path d="M56 18c-6 10 6 12 0 22M72 18c-6 10 6 12 0 22" fill="none" stroke="#FFD24A" stroke-width="4" opacity=".6" stroke-linecap="round"/>
+</svg>

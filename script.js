@@ -45,6 +45,26 @@
   const $rightBtn = document.getElementById("rightBtn");
   const $hornBtn = document.getElementById("hornBtn");
 
+  // ---------- Optional SVG art pack (assets/*.svg) ----------
+  // If these load, we draw them; otherwise the game uses its built-in canvas shapes.
+  const Art = {
+    ready: false,
+    imgs: /** @type {Record<string, HTMLImageElement>} */ ({}),
+    urls: {
+      auto: "assets/auto.svg",
+      car: "assets/car.svg",
+      bus: "assets/bus.svg",
+      truck: "assets/truck.svg",
+      scooter: "assets/scooter.svg",
+      erickshaw: "assets/erickshaw.svg",
+      cow: "assets/cow.svg",
+      pothole: "assets/pothole.svg",
+      barricade: "assets/barricade.svg",
+      coin: "assets/coin.svg",
+      chai: "assets/chai.svg",
+    },
+  };
+
   // ---------- Helpers ----------
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -814,6 +834,24 @@
   }
 
   // ---------- Draw ----------
+  function drawArt(name, dx, dy, dw, dh, { alpha = 1, rotate = 0 } = {}) {
+    if (!Art.ready) return false;
+    const img = Art.imgs[name];
+    if (!img || !img.complete) return false;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (rotate) {
+      ctx.translate(dx + dw / 2, dy + dh / 2);
+      ctx.rotate(rotate);
+      ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+    } else {
+      ctx.drawImage(img, dx, dy, dw, dh);
+    }
+    ctx.restore();
+    return true;
+  }
+
   function drawRoundedRect(x, y, w, h, r) {
     const rr = Math.min(r, w / 2, h / 2);
     ctx.beginPath();
@@ -922,6 +960,21 @@
     const w = player.w;
     const h = player.h;
 
+    // SVG art render path (fallback to shapes below)
+    if (drawArt("auto", x - 14, y - 22, w + 28, h + 36)) {
+      // horn pulse ring on top
+      if (State.horn.activeT > 0) {
+        const t = State.horn.activeT / 0.18;
+        const r = lerp(State.horn.radius * 0.2, State.horn.radius, 1 - t);
+        ctx.strokeStyle = `rgba(88,248,255,${0.5 * t})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      return;
+    }
+
     // shadow
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.beginPath();
@@ -989,6 +1042,18 @@
     ctx.beginPath();
     ctx.ellipse(x + w / 2, y + h - 4, w * 0.55, 7, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // SVG art render path (fallback to shapes below)
+    if (Art.ready) {
+      if (o.kind === "car" && drawArt("car", x - 10, y - 14, w + 20, h + 26)) return;
+      if (o.kind === "bus" && drawArt("bus", x - 12, y - 16, w + 24, h + 30)) return;
+      if (o.kind === "truck" && drawArt("truck", x - 12, y - 16, w + 24, h + 28)) return;
+      if (o.kind === "scooter" && drawArt("scooter", x - 10, y - 14, w + 20, h + 26)) return;
+      if (o.kind === "erickshaw" && drawArt("erickshaw", x - 10, y - 14, w + 20, h + 26)) return;
+      if (o.kind === "cow" && drawArt("cow", x - 12, y - 16, w + 24, h + 30)) return;
+      if (o.kind === "pothole" && drawArt("pothole", x - 12, y - 10, w + 24, h + 22)) return;
+      if (o.kind === "barricade" && drawArt("barricade", x - 12, y - 14, w + 24, h + 26)) return;
+    }
 
     if (o.kind === "car") {
       ctx.fillStyle = palette.car;
@@ -1115,6 +1180,13 @@
 
   function drawPickup(p) {
     const x = p.x, y = p.y, w = p.w, h = p.h;
+
+    // SVG art render path (fallback to shapes below)
+    if (Art.ready) {
+      if (p.kind === "coin" && drawArt("coin", x - 10, y - 10, w + 20, h + 20)) return;
+      if (p.kind === "chai" && drawArt("chai", x - 10, y - 10, w + 20, h + 20)) return;
+    }
+
     if (p.kind === "coin") {
       const wob = Math.sin(p.spin) * 3;
       ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -1296,6 +1368,25 @@
     State.best = Storage.loadBest();
     updateHUD();
     if ($slogan) $slogan.textContent = slogans[0];
+
+    // Load SVG art pack (optional)
+    const entries = Object.entries(Art.urls);
+    let loaded = 0;
+    let failed = 0;
+    for (const [name, url] of entries) {
+      const img = new Image();
+      img.onload = () => {
+        loaded++;
+        Art.ready = loaded === entries.length;
+      };
+      img.onerror = () => {
+        failed++;
+      };
+      img.src = url;
+      Art.imgs[name] = img;
+    }
+    // If any fail, we still allow partial usage (Art.ready means "all loaded"),
+    // but drawArt checks image existence, so it's safe either way.
 
     setOverlay($startOverlay, true);
     setOverlay($pauseOverlay, false);
