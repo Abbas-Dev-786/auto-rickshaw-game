@@ -23,6 +23,10 @@
             <span class="pill__label">Best</span>
             <span class="pill__value" id="best">0</span>
           </div>
+          <div class="pill pill--wide pill--combo" title="Near-miss combo">
+            <span class="pill__label">Combo</span>
+            <span class="pill__value" id="combo">x1</span>
+          </div>
           <div class="pill pill--wide" title="Horn cooldown">
             <span class="pill__label">Horn</span>
             <span class="pill__value" id="horn">Ready</span>
@@ -68,6 +72,7 @@
             <div class="tiny">
               Tip: Near-miss points if you scrape past danger. Don’t ask how Delhi does it.
             </div>
+            <div class="pulseHint" aria-hidden="true">Press <span class="kbd">Space</span> to start</div>
           </div>
         </div>
 
@@ -109,7 +114,10 @@
       </main>
 
       <footer class="footer">
-        <div class="footer__left">Made for a beginner workshop • No external assets • Canvas + Vanilla JS</div>
+        <div class="footer__left">
+          <span>Made for a beginner workshop • No external assets • Canvas + Vanilla JS</span>
+          <span class="slogan" id="slogan">Lane is optional.</span>
+        </div>
         <div class="footer__right">Press <span class="kbd">M</span> to mute</div>
       </footer>
     </div>

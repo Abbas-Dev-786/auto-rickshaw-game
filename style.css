@@ -83,6 +83,14 @@ body{
 }
 .pill--wide{min-width:140px}
 .pill--inline{min-width:auto}
+.pill--combo{
+  border-color: rgba(255,210,74,.22);
+  background: linear-gradient(180deg, rgba(255,210,74,.10), rgba(0,0,0,.18));
+}
+.pill--hot{
+  border-color: rgba(255,210,74,.42) !important;
+  box-shadow: 0 0 0 2px rgba(255,210,74,.08), 0 14px 30px rgba(255,210,74,.10);
+}
 .pill__label{
   font-size:11px;
   letter-spacing:.8px;
@@ -268,6 +276,39 @@ canvas#game{
   background:rgba(0,0,0,.14);
   color:rgba(255,255,255,.72);
   font-size:12px;
+}
+.footer__left{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.slogan{
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.78);
+  font-weight:800;
+  letter-spacing:.2px;
+}
+
+.pulseHint{
+  margin-top:12px;
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(88,248,255,.22);
+  background:rgba(0,0,0,.22);
+  color:rgba(255,255,255,.85);
+  font-weight:900;
+  letter-spacing:.2px;
+  animation:pulsePop 1.2s ease-in-out infinite;
+}
+@keyframes pulsePop{
+  0%{transform:translateY(0) scale(1); filter:saturate(1)}
+  50%{transform:translateY(-1px) scale(1.03); filter:saturate(1.2)}
+  100%{transform:translateY(0) scale(1); filter:saturate(1)}
 }
 
 .mobileControls{

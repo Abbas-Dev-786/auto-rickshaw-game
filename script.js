@@ -15,6 +15,8 @@
   const $score = document.getElementById("score");
   const $best = document.getElementById("best");
   const $horn = document.getElementById("horn");
+  const $combo = document.getElementById("combo");
+  const $slogan = document.getElementById("slogan");
 
   const $startOverlay = document.getElementById("startOverlay");
   const $pauseOverlay = document.getElementById("pauseOverlay");
@@ -143,6 +145,11 @@
       nearMiss() {
         blip({ type: "square", freq: 740, dur: 0.06, gain: 0.08, slide: -200 });
       },
+      whoosh() {
+        // quick pitchy glide (slow-mo trigger)
+        blip({ type: "triangle", freq: 520, dur: 0.11, gain: 0.08, slide: -340, detune: -8 });
+        setTimeout(() => blip({ type: "triangle", freq: 320, dur: 0.12, gain: 0.06, slide: -160, detune: 5 }), 40);
+      },
       hit() {
         noiseHit();
         blip({ type: "square", freq: 90, dur: 0.12, gain: 0.18, slide: -10 });
@@ -193,9 +200,12 @@
     timeAlive: 0,
     difficulty: 1,
     speed: 320, // world scroll px/sec
+    baseSpeed: 320,
+    slowmoT: 0,
     spawnTimer: 0,
     pickupTimer: 0,
     nearMissCombo: 0,
+    comboT: 0,
 
     shake: 0,
     shakeX: 0,
@@ -219,6 +229,9 @@
       right: false,
       horn: false,
     },
+
+    sloganIndex: 0,
+    sloganNextAt: 0,
   };
 
   const Storage = {
@@ -278,15 +291,24 @@
 
     if (State.horn.readyIn <= 0) $horn.textContent = "Ready";
     else $horn.textContent = `${State.horn.readyIn.toFixed(1)}s`;
+
+    if ($combo) {
+      const mult = 1 + Math.floor(State.nearMissCombo);
+      $combo.textContent = `x${mult}`;
+      $combo.parentElement?.classList.toggle("pill--hot", mult >= 4);
+    }
   }
 
   // ---------- Spawning ----------
   const obstacleTypes = {
     car: { kind: "car", w: 48, h: 82, big: false, score: 0 },
     bus: { kind: "bus", w: 66, h: 126, big: true, score: 0 },
+    truck: { kind: "truck", w: 72, h: 120, big: true, score: 0 },
     cow: { kind: "cow", w: 60, h: 60, big: false, score: 0 },
     pothole: { kind: "pothole", w: 66, h: 52, big: false, score: 0, hazard: true },
     barricade: { kind: "barricade", w: 64, h: 62, big: false, score: 0, hazard: true },
+    scooter: { kind: "scooter", w: 40, h: 62, big: false, score: 0 },
+    erickshaw: { kind: "erickshaw", w: 50, h: 78, big: false, score: 0 },
   };
 
   function laneX(laneIndex, w) {
@@ -300,10 +322,13 @@
     const pool = [];
 
     pool.push("car", "car", "car");
+    if (d > 1.1) pool.push("scooter");
+    if (d > 1.4) pool.push("erickshaw");
     if (d > 1.2) pool.push("cow");
     if (d > 1.6) pool.push("pothole");
     if (d > 2.0) pool.push("barricade");
     if (d > 2.3) pool.push("bus");
+    if (d > 2.7) pool.push("truck");
     if (State.event?.type === "vip") pool.push("bus", "bus");
     if (State.event?.type === "festival") pool.push("car", "car", "cow", "barricade");
 
@@ -431,10 +456,13 @@
     State.timeAlive = 0;
     State.score = 0;
     State.difficulty = 1;
+    State.baseSpeed = 320;
     State.speed = 320;
+    State.slowmoT = 0;
     State.spawnTimer = 0;
     State.pickupTimer = 0;
     State.nearMissCombo = 0;
+    State.comboT = 0;
     State.roadY = 0;
     State.shake = 0;
     State.event = null;
@@ -448,6 +476,27 @@
     player.invulnT = 0;
 
     updateHUD();
+  }
+
+  const slogans = [
+    "Lane is optional.",
+    "U-Turn is a suggestion.",
+    "Indicator? Never heard of her.",
+    "If gap exists, auto fits.",
+    "DTC bus = final boss.",
+    "Cow has right of way.",
+    "One honk = diplomacy.",
+    "Wrong side is a mindset.",
+    "Metro pillar slalom.",
+  ];
+
+  function updateSlogan() {
+    if (!$slogan) return;
+    if (State.mode === "playing" && State.t < State.sloganNextAt) return;
+    if (State.t < State.sloganNextAt) return;
+    State.sloganIndex = (State.sloganIndex + 1) % slogans.length;
+    $slogan.textContent = slogans[State.sloganIndex];
+    State.sloganNextAt = State.t + 5.2;
   }
 
   function startGame() {
@@ -580,7 +629,7 @@
       State.event?.type === "vip" ? 1.12 :
       1.0;
 
-    State.speed = (320 + State.timeAlive * 9) * eventBoost; // increases scroll speed
+    State.baseSpeed = (320 + State.timeAlive * 9) * eventBoost; // increases scroll speed
   }
 
   function updateSpawns(dt) {
@@ -630,6 +679,15 @@
 
     // event expiration
     if (State.event && State.t > State.event.until) State.event = null;
+
+    // slow-mo timer (1s on near miss)
+    State.slowmoT = Math.max(0, State.slowmoT - dt);
+    const slowK = State.slowmoT > 0 ? 0.58 : 1.0;
+    State.speed = State.baseSpeed * slowK;
+
+    // combo timer
+    State.comboT = Math.max(0, State.comboT - dt);
+    if (State.comboT <= 0) State.nearMissCombo = Math.max(0, State.nearMissCombo - dt * 1.2);
 
     // obstacles
     for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -689,11 +747,19 @@
 
     if (closeX && closeY && notOver && o.y > player.y - 40 && o.y < player.y + player.h + 10) {
       o.nearMissed = true;
-      State.nearMissCombo = Math.min(7, State.nearMissCombo + 1);
-      const bonus = 40 + State.nearMissCombo * 18;
+      State.nearMissCombo = Math.min(9, State.nearMissCombo + 1);
+      State.comboT = 1.4;
+
+      const mult = 1 + Math.floor(State.nearMissCombo);
+      const base = 38 + State.nearMissCombo * 16;
+      const bonus = base * mult;
       State.score += bonus;
+
+      // 1-second slow-mo “hype”
+      State.slowmoT = 1.0;
+      Audio.SFX.whoosh();
       Audio.SFX.nearMiss();
-      sparkle(px, py - 10, "Near Miss!");
+      sparkle(px, py - 10, `Near Miss! x${mult}`);
     }
   }
 
@@ -732,7 +798,7 @@
     }
 
     // decay combo if no recent near misses
-    State.nearMissCombo = Math.max(0, State.nearMissCombo - 0.008);
+    // (decay handled by comboT in updateEntities)
   }
 
   function updateShake(dt) {
@@ -804,20 +870,49 @@
     }
     ctx.restore();
 
-    // tiny city details on sidewalks
-    for (let i = 0; i < 14; i++) {
-      const y = ((i * 110 + State.roadY * 0.85) % (H + 140)) - 140;
-      const leftX = 10 + (i % 2) * 14;
-      const rightX = W - 42 - ((i + 1) % 2) * 10;
+    // animated sidewalk shops + crowd dots
+    const shopLabels = ["CHAAT", "METRO", "PAAN", "MOMO", "GOLGAPPA", "KULFI"];
+    for (let i = 0; i < 12; i++) {
+      const y = ((i * 120 + State.roadY * 0.88) % (H + 160)) - 160;
 
-      // poles / signboards
-      ctx.fillStyle = "rgba(255,255,255,0.12)";
-      ctx.fillRect(leftX, y + 14, 5, 50);
-      ctx.fillRect(rightX + 28, y + 16, 5, 52);
+      // shop blocks
+      const lx = 10;
+      const rx = W - 54;
+      const lh = 64;
+      const rh = 68;
 
-      ctx.fillStyle = i % 3 === 0 ? "rgba(255,79,216,0.26)" : "rgba(255,210,74,0.20)";
-      ctx.fillRect(leftX - 4, y, 22, 14);
-      ctx.fillRect(rightX + 12, y + 4, 22, 14);
+      ctx.fillStyle = i % 2 === 0 ? "rgba(255,79,216,0.14)" : "rgba(88,248,255,0.12)";
+      ctx.fillRect(lx, y + 14, 44, lh);
+      ctx.fillStyle = i % 3 === 0 ? "rgba(255,210,74,0.14)" : "rgba(69,255,154,0.10)";
+      ctx.fillRect(rx, y + 10, 44, rh);
+
+      // signboards
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillRect(lx, y + 8, 44, 14);
+      ctx.fillRect(rx, y + 4, 44, 14);
+      ctx.fillStyle = "rgba(255,255,255,0.82)";
+      ctx.font = "900 9px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(shopLabels[i % shopLabels.length], lx + 22, y + 15);
+      ctx.fillText(shopLabels[(i + 2) % shopLabels.length], rx + 22, y + 11);
+
+      // crowd (little heads)
+      for (let j = 0; j < 6; j++) {
+        const bob = Math.sin(State.t * 6 + i * 0.8 + j) * 1.5;
+        const cx = lx + 8 + j * 6 + (i % 2) * 2;
+        const cy = y + 56 + bob;
+        ctx.fillStyle = j % 3 === 0 ? "rgba(255,210,74,0.35)" : j % 3 === 1 ? "rgba(255,79,216,0.35)" : "rgba(88,248,255,0.28)";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2.0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const cx2 = rx + 10 + j * 5;
+        const cy2 = y + 54 + bob;
+        ctx.beginPath();
+        ctx.arc(cx2, cy2, 2.0, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
@@ -922,6 +1017,22 @@
       // windows
       ctx.fillStyle = "rgba(255,255,255,0.14)";
       for (let i = 0; i < 3; i++) ctx.fillRect(x + 10 + i * 16, y + 48, 12, 16);
+    } else if (o.kind === "truck") {
+      ctx.fillStyle = "rgba(255,210,74,0.95)";
+      drawRoundedRect(x, y + 10, w, h - 14, 14);
+      ctx.fill();
+      // cabin
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      drawRoundedRect(x + 8, y + 22, w - 16, 26, 10);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.font = "900 9px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("TRUCK", x + w / 2, y + 36);
+      // grill lines
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      for (let i = 0; i < 4; i++) ctx.fillRect(x + 14, y + h - 34 + i * 6, w - 28, 3);
     } else if (o.kind === "cow") {
       ctx.fillStyle = palette.cow;
       drawRoundedRect(x, y + 14, w, h - 14, 18);
@@ -960,7 +1071,46 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("STOP", x + w / 2, y + h - 20);
+    } else if (o.kind === "scooter") {
+      ctx.fillStyle = "rgba(69,255,154,0.95)";
+      drawRoundedRect(x, y + 10, w, h - 14, 14);
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      drawRoundedRect(x + 6, y + 18, w - 12, 16, 10);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = "900 9px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("SCOOT", x + w / 2, y + 26);
+    } else if (o.kind === "erickshaw") {
+      ctx.fillStyle = "rgba(88,248,255,0.92)";
+      drawRoundedRect(x, y + 10, w, h - 14, 14);
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      drawRoundedRect(x + 6, y + 16, w - 12, 18, 10);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.font = "900 9px ui-sans-serif, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("E-RIK", x + w / 2, y + 25);
     }
+  }
+
+  function drawCRT() {
+    // scanlines + slight vignette (simple, cheap)
+    ctx.save();
+    ctx.globalCompositeOperation = "overlay";
+    ctx.fillStyle = "rgba(255,255,255,0.03)";
+    for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1);
+    ctx.globalCompositeOperation = "multiply";
+    const v = ctx.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, Math.max(W, H) * 0.7);
+    v.addColorStop(0, "rgba(0,0,0,0)");
+    v.addColorStop(1, "rgba(0,0,0,0.28)");
+    ctx.fillStyle = v;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
   }
 
   function drawPickup(p) {
@@ -1101,6 +1251,7 @@
       ctx.fillText(label, W - 92, 21);
     }
 
+    drawCRT();
     ctx.restore();
   }
 
@@ -1126,12 +1277,14 @@
       collideAndCollect();
       maybeTriggerEvent();
       updateShake(dt);
+      updateSlogan();
       updateHUD();
     } else {
       // idle anim even on menus
       State.roadY += 120 * dt;
       updateEntities(dt);
       updateShake(dt);
+      updateSlogan();
     }
 
     draw();
@@ -1142,6 +1295,7 @@
   function init() {
     State.best = Storage.loadBest();
     updateHUD();
+    if ($slogan) $slogan.textContent = slogans[0];
 
     setOverlay($startOverlay, true);
     setOverlay($pauseOverlay, false);
