@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Delhi Auto-Rickshaw Rush</title>
+    <title>Auto-Rickshaw Rush</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="app">
       <header class="topbar">
         <div class="brand">
-          <div class="brand__title">Delhi Auto-Rickshaw Rush</div>
-          <div class="brand__tag">Horn OK Please • Delhi Traffic Survival</div>
+          <div class="brand__title">Auto-Rickshaw Rush</div>
+          <div class="brand__tag">Horn OK Please • Traffic Survival</div>
         </div>
 
         <div class="hud">
@@ -32,24 +32,40 @@
             <span class="pill__value" id="horn">Ready</span>
           </div>
 
-          <button class="iconBtn" id="muteBtn" aria-label="Toggle mute" title="Mute">
+          <button
+            class="iconBtn"
+            id="muteBtn"
+            aria-label="Toggle mute"
+            title="Mute"
+          >
             <span id="muteIcon" aria-hidden="true">🔊</span>
           </button>
-          <button class="iconBtn" id="pauseBtn" aria-label="Pause" title="Pause (P)">
+          <button
+            class="iconBtn"
+            id="pauseBtn"
+            aria-label="Pause"
+            title="Pause (P)"
+          >
             <span aria-hidden="true">⏸</span>
           </button>
         </div>
       </header>
 
       <main class="stage">
-        <canvas id="game" width="420" height="720" aria-label="Game canvas"></canvas>
+        <canvas
+          id="game"
+          width="420"
+          height="720"
+          aria-label="Game canvas"
+        ></canvas>
 
         <div class="overlay overlay--show" id="startOverlay">
           <div class="card">
             <div class="card__eyebrow">Retro Arcade • Modern Desi Chaos</div>
-            <h1 class="card__title">Delhi Auto-Rickshaw Rush</h1>
+            <h1 class="card__title">Auto-Rickshaw Rush</h1>
             <p class="card__text">
-              Dodge the madness. Grab coins & chai. Honk your way out of trouble.
+              Dodge the madness. Grab coins & chai. Honk your way out of
+              trouble.
             </p>
             <div class="controls">
               <div class="controls__row">
@@ -70,9 +86,12 @@
               <button class="btn" id="howBtn">How to Play</button>
             </div>
             <div class="tiny">
-              Tip: Near-miss points if you scrape past danger. Don’t ask how Delhi does it.
+              Tip: Near-miss points if you scrape past danger. Don’t ask how
+              does it.
             </div>
-            <div class="pulseHint" aria-hidden="true">Press <span class="kbd">Space</span> to start</div>
+            <div class="pulseHint" aria-hidden="true">
+              Press <span class="kbd">Space</span> to start
+            </div>
           </div>
         </div>
 
@@ -80,7 +99,9 @@
           <div class="card">
             <div class="card__eyebrow">Auto stopped. Traffic didn’t.</div>
             <h2 class="card__title">Paused</h2>
-            <p class="card__text">Press <span class="kbd">P</span> to resume.</p>
+            <p class="card__text">
+              Press <span class="kbd">P</span> to resume.
+            </p>
             <div class="actions">
               <button class="btn btn--primary" id="resumeBtn">Resume</button>
               <button class="btn" id="restartBtn1">Restart</button>
@@ -90,22 +111,35 @@
 
         <div class="overlay" id="gameOverOverlay">
           <div class="card">
-            <div class="card__eyebrow">Bonk. That’s Delhi for you.</div>
+            <div class="card__eyebrow">Bonk. That’s for you.</div>
             <h2 class="card__title">Game Over</h2>
             <p class="card__text">
-              <span class="pill pill--inline"><span class="pill__label">Final</span> <span class="pill__value" id="finalScore">0</span></span>
-              <span class="pill pill--inline"><span class="pill__label">Best</span> <span class="pill__value" id="finalBest">0</span></span>
+              <span class="pill pill--inline"
+                ><span class="pill__label">Final</span>
+                <span class="pill__value" id="finalScore">0</span></span
+              >
+              <span class="pill pill--inline"
+                ><span class="pill__label">Best</span>
+                <span class="pill__value" id="finalBest">0</span></span
+              >
             </p>
             <div class="rankLine" id="rankLine">Rank: Dilli Driver</div>
             <div class="actions">
-              <button class="btn btn--primary" id="restartBtn2">Restart Rush</button>
+              <button class="btn btn--primary" id="restartBtn2">
+                Restart Rush
+              </button>
               <button class="btn" id="shareBtn">Copy Brag Text</button>
             </div>
             <div class="tiny" id="gameOverTip">Horn OK Please.</div>
           </div>
         </div>
 
-        <div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
+        <div
+          class="toast"
+          id="toast"
+          aria-live="polite"
+          aria-atomic="true"
+        ></div>
 
         <div class="mobileControls" id="mobileControls" aria-hidden="true">
           <button class="mBtn" id="leftBtn">◀</button>
@@ -116,10 +150,15 @@
 
       <footer class="footer">
         <div class="footer__left">
-          <span>Made for a beginner workshop • No external assets • Canvas + Vanilla JS</span>
+          <span
+            >Made for a beginner workshop • No external assets • Canvas +
+            Vanilla JS</span
+          >
           <span class="slogan" id="slogan">Lane is optional.</span>
         </div>
-        <div class="footer__right">Press <span class="kbd">M</span> to mute</div>
+        <div class="footer__right">
+          Press <span class="kbd">M</span> to mute
+        </div>
       </footer>
     </div>
 
@@ -131,11 +170,12 @@
             <li><b>Dodge</b> cars, buses, cows, potholes, barricades.</li>
             <li><b>Score</b> rises with time + near misses + pickups.</li>
             <li><b>Horn</b> (Space) pushes small traffic away (cooldown).</li>
-            <li><b>Events</b> trigger at milestones: rain, VIP convoy, festival traffic.</li>
+            <li>
+              <b>Events</b> trigger at milestones: rain, VIP convoy, festival
+              traffic.
+            </li>
           </ul>
-          <div class="modal__note">
-            “Delhi Traffic Survival” is a state of mind.
-          </div>
+          <div class="modal__note">“ Traffic Survival” is a state of mind.</div>
         </div>
         <div class="modal__actions">
           <button class="btn btn--primary" id="closeHowBtn">Got it</button>

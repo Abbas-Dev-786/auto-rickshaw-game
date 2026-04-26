@@ -1,5 +1,5 @@
 /*
-  Delhi Auto-Rickshaw Rush
+   Auto-Rickshaw Rush
   - Vanilla JS + HTML5 Canvas
   - Shapes-only "art" (no external assets)
   - Beginner-friendly structure
@@ -74,10 +74,7 @@
 
   function rectsOverlap(a, b) {
     return (
-      a.x < b.x + b.w &&
-      a.x + a.w > b.x &&
-      a.y < b.y + b.h &&
-      a.y + a.h > b.y
+      a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
     );
   }
 
@@ -102,7 +99,14 @@
       else toast("Sound ON");
     }
 
-    function blip({ type = "square", freq = 440, dur = 0.09, gain = 0.12, slide = 0, detune = 0 }) {
+    function blip({
+      type = "square",
+      freq = 440,
+      dur = 0.09,
+      gain = 0.12,
+      slide = 0,
+      detune = 0,
+    }) {
       if (muted) return;
       const ac = ensure();
       const t0 = ac.currentTime;
@@ -112,7 +116,11 @@
 
       o.type = type;
       o.frequency.setValueAtTime(freq, t0);
-      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
+      if (slide)
+        o.frequency.exponentialRampToValueAtTime(
+          Math.max(40, freq + slide),
+          t0 + dur,
+        );
       o.detune.setValueAtTime(detune, t0);
 
       g.gain.setValueAtTime(0.0001, t0);
@@ -133,7 +141,8 @@
       const bufferSize = Math.floor(ac.sampleRate * dur);
       const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
       const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      for (let i = 0; i < bufferSize; i++)
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
 
       const src = ac.createBufferSource();
       src.buffer = buffer;
@@ -150,38 +159,117 @@
     const SFX = {
       start() {
         blip({ type: "square", freq: 440, dur: 0.08, gain: 0.12, slide: 220 });
-        setTimeout(() => blip({ type: "square", freq: 660, dur: 0.09, gain: 0.12, slide: 330 }), 70);
+        setTimeout(
+          () =>
+            blip({
+              type: "square",
+              freq: 660,
+              dur: 0.09,
+              gain: 0.12,
+              slide: 330,
+            }),
+          70,
+        );
       },
       horn() {
-        blip({ type: "sawtooth", freq: 220, dur: 0.12, gain: 0.16, slide: 30, detune: -10 });
-        setTimeout(() => blip({ type: "sawtooth", freq: 196, dur: 0.12, gain: 0.14, slide: -10, detune: 5 }), 40);
+        blip({
+          type: "sawtooth",
+          freq: 220,
+          dur: 0.12,
+          gain: 0.16,
+          slide: 30,
+          detune: -10,
+        });
+        setTimeout(
+          () =>
+            blip({
+              type: "sawtooth",
+              freq: 196,
+              dur: 0.12,
+              gain: 0.14,
+              slide: -10,
+              detune: 5,
+            }),
+          40,
+        );
       },
       coin() {
-        blip({ type: "triangle", freq: 880, dur: 0.07, gain: 0.12, slide: 260 });
+        blip({
+          type: "triangle",
+          freq: 880,
+          dur: 0.07,
+          gain: 0.12,
+          slide: 260,
+        });
       },
       chai() {
-        blip({ type: "square", freq: 520, dur: 0.07, gain: 0.10, slide: -160 });
-        setTimeout(() => blip({ type: "square", freq: 420, dur: 0.08, gain: 0.10, slide: -120 }), 60);
+        blip({ type: "square", freq: 520, dur: 0.07, gain: 0.1, slide: -160 });
+        setTimeout(
+          () =>
+            blip({
+              type: "square",
+              freq: 420,
+              dur: 0.08,
+              gain: 0.1,
+              slide: -120,
+            }),
+          60,
+        );
       },
       nearMiss() {
         blip({ type: "square", freq: 740, dur: 0.06, gain: 0.08, slide: -200 });
       },
       whoosh() {
         // quick pitchy glide (slow-mo trigger)
-        blip({ type: "triangle", freq: 520, dur: 0.11, gain: 0.08, slide: -340, detune: -8 });
-        setTimeout(() => blip({ type: "triangle", freq: 320, dur: 0.12, gain: 0.06, slide: -160, detune: 5 }), 40);
+        blip({
+          type: "triangle",
+          freq: 520,
+          dur: 0.11,
+          gain: 0.08,
+          slide: -340,
+          detune: -8,
+        });
+        setTimeout(
+          () =>
+            blip({
+              type: "triangle",
+              freq: 320,
+              dur: 0.12,
+              gain: 0.06,
+              slide: -160,
+              detune: 5,
+            }),
+          40,
+        );
       },
       hit() {
         noiseHit();
         blip({ type: "square", freq: 90, dur: 0.12, gain: 0.18, slide: -10 });
       },
       event() {
-        blip({ type: "triangle", freq: 330, dur: 0.1, gain: 0.10, slide: 160 });
-        setTimeout(() => blip({ type: "triangle", freq: 480, dur: 0.1, gain: 0.10, slide: 180 }), 90);
+        blip({ type: "triangle", freq: 330, dur: 0.1, gain: 0.1, slide: 160 });
+        setTimeout(
+          () =>
+            blip({
+              type: "triangle",
+              freq: 480,
+              dur: 0.1,
+              gain: 0.1,
+              slide: 180,
+            }),
+          90,
+        );
       },
     };
 
-    return { SFX, setMuted, ensure, get muted() { return muted; } };
+    return {
+      SFX,
+      setMuted,
+      ensure,
+      get muted() {
+        return muted;
+      },
+    };
   })();
 
   // ---------- Visual constants ----------
@@ -262,7 +350,7 @@
   };
 
   const Storage = {
-    key: "delhi-auto-rush-best",
+    key: "-auto-rush-best",
     loadBest() {
       const v = Number(localStorage.getItem(this.key));
       return Number.isFinite(v) ? v : 0;
@@ -332,11 +420,32 @@
     bus: { kind: "bus", w: 66, h: 126, big: true, score: 0 },
     truck: { kind: "truck", w: 72, h: 120, big: true, score: 0 },
     cow: { kind: "cow", w: 60, h: 60, big: false, score: 0 },
-    pothole: { kind: "pothole", w: 66, h: 52, big: false, score: 0, hazard: true },
-    barricade: { kind: "barricade", w: 64, h: 62, big: false, score: 0, hazard: true },
+    pothole: {
+      kind: "pothole",
+      w: 66,
+      h: 52,
+      big: false,
+      score: 0,
+      hazard: true,
+    },
+    barricade: {
+      kind: "barricade",
+      w: 64,
+      h: 62,
+      big: false,
+      score: 0,
+      hazard: true,
+    },
     scooter: { kind: "scooter", w: 40, h: 62, big: false, score: 0 },
     erickshaw: { kind: "erickshaw", w: 50, h: 78, big: false, score: 0 },
-    sweep: { kind: "sweep", w: road.w, h: 64, big: true, score: 0, hazard: true },
+    sweep: {
+      kind: "sweep",
+      w: road.w,
+      h: 64,
+      big: true,
+      score: 0,
+      hazard: true,
+    },
   };
 
   function laneX(laneIndex, w) {
@@ -358,7 +467,8 @@
     if (d > 2.3) pool.push("bus");
     if (d > 2.7) pool.push("truck");
     if (State.event?.type === "vip") pool.push("bus", "bus");
-    if (State.event?.type === "festival") pool.push("car", "car", "cow", "barricade");
+    if (State.event?.type === "festival")
+      pool.push("car", "car", "cow", "barricade");
 
     // Metro Barrier Sweep: occasional “boss hazard” leaving one safe lane gap
     if (d > 2.2 && State.sweepCooldown <= 0 && Math.random() < 0.06) {
@@ -412,7 +522,7 @@
   function spawnPickup() {
     // Mostly coins, sometimes chai, rarely magnet power-up
     const roll = Math.random();
-    const kind = roll < 0.10 ? "magnet" : roll < 0.32 ? "chai" : "coin";
+    const kind = roll < 0.1 ? "magnet" : roll < 0.32 ? "chai" : "coin";
 
     const w = kind === "chai" ? 44 : kind === "magnet" ? 40 : 32;
     const h = kind === "chai" ? 44 : kind === "magnet" ? 40 : 32;
@@ -479,7 +589,13 @@
     State.horn.readyIn = State.horn.cooldown;
     State.horn.activeT = 0.18;
     Audio.SFX.horn();
-    burst(player.x + player.w / 2, player.y + 12, 12, "rgba(88,248,255,0.9)", 0.9);
+    burst(
+      player.x + player.w / 2,
+      player.y + 12,
+      12,
+      "rgba(88,248,255,0.9)",
+      0.9,
+    );
 
     // push small obstacles near player
     const cx = player.x + player.w / 2;
@@ -602,7 +718,8 @@
     $finalScore.textContent = formatInt(State.score);
     $finalBest.textContent = formatInt(State.best);
     $gameOverTip.textContent = reason;
-    if ($rankLine) $rankLine.textContent = `Rank: ${rankFor(State.score).title}`;
+    if ($rankLine)
+      $rankLine.textContent = `Rank: ${rankFor(State.score).title}`;
   }
 
   // ---------- Input ----------
@@ -611,49 +728,77 @@
     if (code === "ArrowRight" || code === "KeyD") State.input.right = down;
   }
 
-  window.addEventListener("keydown", (e) => {
-    if (["ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (["ArrowLeft", "ArrowRight", "Space"].includes(e.code))
+        e.preventDefault();
 
-    if (e.code === "KeyP") {
-      if (State.mode === "playing") pauseGame();
-      else if (State.mode === "paused") resumeGame();
-      return;
-    }
+      if (e.code === "KeyP") {
+        if (State.mode === "playing") pauseGame();
+        else if (State.mode === "paused") resumeGame();
+        return;
+      }
 
-    if (e.code === "KeyM") {
-      Audio.setMuted(!Audio.muted);
-      $muteIcon.textContent = Audio.muted ? "🔇" : "🔊";
-      return;
-    }
+      if (e.code === "KeyM") {
+        Audio.setMuted(!Audio.muted);
+        $muteIcon.textContent = Audio.muted ? "🔇" : "🔊";
+        return;
+      }
 
-    if (State.mode === "start" && (e.code === "Enter" || e.code === "Space")) {
-      startGame();
-      return;
-    }
+      if (
+        State.mode === "start" &&
+        (e.code === "Enter" || e.code === "Space")
+      ) {
+        startGame();
+        return;
+      }
 
-    if (State.mode === "gameover" && (e.code === "Enter" || e.code === "Space")) {
-      startGame();
-      return;
-    }
+      if (
+        State.mode === "gameover" &&
+        (e.code === "Enter" || e.code === "Space")
+      ) {
+        startGame();
+        return;
+      }
 
-    setInputKey(e.code, true);
-    if (e.code === "Space") tryHorn();
-  }, { passive:false });
+      setInputKey(e.code, true);
+      if (e.code === "Space") tryHorn();
+    },
+    { passive: false },
+  );
 
   window.addEventListener("keyup", (e) => setInputKey(e.code, false));
 
   function bindHold(btn, onDown, onUp) {
-    const down = (e) => { e.preventDefault(); onDown(); };
-    const up = (e) => { e.preventDefault(); onUp(); };
+    const down = (e) => {
+      e.preventDefault();
+      onDown();
+    };
+    const up = (e) => {
+      e.preventDefault();
+      onUp();
+    };
     btn.addEventListener("pointerdown", down);
     btn.addEventListener("pointerup", up);
     btn.addEventListener("pointercancel", up);
     btn.addEventListener("pointerleave", up);
   }
 
-  bindHold($leftBtn, () => (State.input.left = true), () => (State.input.left = false));
-  bindHold($rightBtn, () => (State.input.right = true), () => (State.input.right = false));
-  $hornBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); tryHorn(); });
+  bindHold(
+    $leftBtn,
+    () => (State.input.left = true),
+    () => (State.input.left = false),
+  );
+  bindHold(
+    $rightBtn,
+    () => (State.input.right = true),
+    () => (State.input.right = false),
+  );
+  $hornBtn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    tryHorn();
+  });
 
   // ---------- Buttons ----------
   $startBtn.addEventListener("click", startGame);
@@ -672,7 +817,7 @@
 
   $shareBtn.addEventListener("click", async () => {
     const r = rankFor(State.score);
-    const text = `I survived Delhi traffic for ${formatInt(State.score)} points in Delhi Auto-Rickshaw Rush — Rank: ${r.title}. Horn OK Please!`;
+    const text = `I survived  traffic for ${formatInt(State.score)} points in  Auto-Rickshaw Rush — Rank: ${r.title}. Horn OK Please!`;
     try {
       await navigator.clipboard.writeText(text);
       toast("Copied brag text");
@@ -693,9 +838,11 @@
     State.difficulty = 1 + State.timeAlive * 0.06; // ~ +0.36 per 6s
 
     const eventBoost =
-      State.event?.type === "festival" ? 1.18 :
-      State.event?.type === "vip" ? 1.12 :
-      1.0;
+      State.event?.type === "festival"
+        ? 1.18
+        : State.event?.type === "vip"
+          ? 1.12
+          : 1.0;
 
     State.baseSpeed = (320 + State.timeAlive * 9) * eventBoost; // increases scroll speed
   }
@@ -707,7 +854,8 @@
     State.spawnTimer -= dt;
     if (State.spawnTimer <= 0) {
       spawnObstacle();
-      if (Math.random() < 0.08 + clamp(State.difficulty * 0.02, 0, 0.12)) spawnObstacle();
+      if (Math.random() < 0.08 + clamp(State.difficulty * 0.02, 0, 0.12))
+        spawnObstacle();
       State.spawnTimer = spawnRate * festivalExtra * rand(0.75, 1.25);
     }
 
@@ -755,7 +903,8 @@
 
     // combo timer
     State.comboT = Math.max(0, State.comboT - dt);
-    if (State.comboT <= 0) State.nearMissCombo = Math.max(0, State.nearMissCombo - dt * 1.2);
+    if (State.comboT <= 0)
+      State.nearMissCombo = Math.max(0, State.nearMissCombo - dt * 1.2);
 
     // power-ups
     State.power.magnetT = Math.max(0, State.power.magnetT - dt);
@@ -832,11 +981,17 @@
     const dx = Math.abs(px - ox);
     const dy = Math.abs(py - oy);
 
-    const closeX = dx < (player.w * 0.55 + o.w * 0.45);
-    const closeY = dy < (player.h * 0.60 + o.h * 0.55);
+    const closeX = dx < player.w * 0.55 + o.w * 0.45;
+    const closeY = dy < player.h * 0.6 + o.h * 0.55;
     const notOver = !rectsOverlap(player, o);
 
-    if (closeX && closeY && notOver && o.y > player.y - 40 && o.y < player.y + player.h + 10) {
+    if (
+      closeX &&
+      closeY &&
+      notOver &&
+      o.y > player.y - 40 &&
+      o.y < player.y + player.h + 10
+    ) {
       o.nearMissed = true;
       State.nearMissCombo = Math.min(9, State.nearMissCombo + 1);
       State.comboT = 1.4;
@@ -897,7 +1052,13 @@
           if (!inGap) {
             Audio.SFX.hit();
             State.shake = 0.65;
-            burst(player.x + player.w / 2, player.y + player.h / 2, 54, "rgba(255,59,59,0.92)", 1.25);
+            burst(
+              player.x + player.w / 2,
+              player.y + player.h / 2,
+              54,
+              "rgba(255,59,59,0.92)",
+              1.25,
+            );
             gameOver("METRO BARRIER said: 'No entry'.");
             return;
           }
@@ -908,7 +1069,13 @@
       if (rectsOverlap(player, o)) {
         Audio.SFX.hit();
         State.shake = 0.55;
-        burst(player.x + player.w / 2, player.y + player.h / 2, 42, "rgba(255,59,59,0.92)", 1.2);
+        burst(
+          player.x + player.w / 2,
+          player.y + player.h / 2,
+          42,
+          "rgba(255,59,59,0.92)",
+          1.2,
+        );
         gameOver(`SPLAT! You kissed a ${o.kind.toUpperCase()}.`);
         return;
       }
@@ -978,7 +1145,7 @@
 
     ctx.fillStyle = palette.curb2;
     for (let y = -30; y < H + 30; y += 54) {
-      const yy = (y + State.roadY * 0.7) % (H + 54) - 54;
+      const yy = ((y + State.roadY * 0.7) % (H + 54)) - 54;
       ctx.fillRect(road.x - curbW, yy, curbW, 20);
       ctx.fillRect(road.x + road.w, yy, curbW, 20);
     }
@@ -992,7 +1159,7 @@
 
     // lane lines
     ctx.save();
-    ctx.translate(0, (State.roadY % 40));
+    ctx.translate(0, State.roadY % 40);
     ctx.strokeStyle = "rgba(255,255,255,0.24)";
     ctx.lineWidth = 2;
     for (let i = 1; i < road.lanes; i++) {
@@ -1016,9 +1183,11 @@
       const lh = 64;
       const rh = 68;
 
-      ctx.fillStyle = i % 2 === 0 ? "rgba(255,79,216,0.14)" : "rgba(88,248,255,0.12)";
+      ctx.fillStyle =
+        i % 2 === 0 ? "rgba(255,79,216,0.14)" : "rgba(88,248,255,0.12)";
       ctx.fillRect(lx, y + 14, 44, lh);
-      ctx.fillStyle = i % 3 === 0 ? "rgba(255,210,74,0.14)" : "rgba(69,255,154,0.10)";
+      ctx.fillStyle =
+        i % 3 === 0 ? "rgba(255,210,74,0.14)" : "rgba(69,255,154,0.10)";
       ctx.fillRect(rx, y + 10, 44, rh);
 
       // signboards
@@ -1037,7 +1206,12 @@
         const bob = Math.sin(State.t * 6 + i * 0.8 + j) * 1.5;
         const cx = lx + 8 + j * 6 + (i % 2) * 2;
         const cy = y + 56 + bob;
-        ctx.fillStyle = j % 3 === 0 ? "rgba(255,210,74,0.35)" : j % 3 === 1 ? "rgba(255,79,216,0.35)" : "rgba(88,248,255,0.28)";
+        ctx.fillStyle =
+          j % 3 === 0
+            ? "rgba(255,210,74,0.35)"
+            : j % 3 === 1
+              ? "rgba(255,79,216,0.35)"
+              : "rgba(88,248,255,0.28)";
         ctx.beginPath();
         ctx.arc(cx, cy, 2.0, 0, Math.PI * 2);
         ctx.fill();
@@ -1133,7 +1307,10 @@
   }
 
   function drawObstacle(o) {
-    const x = o.x, y = o.y, w = o.w, h = o.h;
+    const x = o.x,
+      y = o.y,
+      w = o.w,
+      h = o.h;
     // simple shadow
     ctx.fillStyle = "rgba(0,0,0,0.25)";
     ctx.beginPath();
@@ -1142,14 +1319,37 @@
 
     // SVG art render path (fallback to shapes below)
     if (Art.ready) {
-      if (o.kind === "car" && drawArt("car", x - 10, y - 14, w + 20, h + 26)) return;
-      if (o.kind === "bus" && drawArt("bus", x - 12, y - 16, w + 24, h + 30)) return;
-      if (o.kind === "truck" && drawArt("truck", x - 12, y - 16, w + 24, h + 28)) return;
-      if (o.kind === "scooter" && drawArt("scooter", x - 10, y - 14, w + 20, h + 26)) return;
-      if (o.kind === "erickshaw" && drawArt("erickshaw", x - 10, y - 14, w + 20, h + 26)) return;
-      if (o.kind === "cow" && drawArt("cow", x - 12, y - 16, w + 24, h + 30)) return;
-      if (o.kind === "pothole" && drawArt("pothole", x - 12, y - 10, w + 24, h + 22)) return;
-      if (o.kind === "barricade" && drawArt("barricade", x - 12, y - 14, w + 24, h + 26)) return;
+      if (o.kind === "car" && drawArt("car", x - 10, y - 14, w + 20, h + 26))
+        return;
+      if (o.kind === "bus" && drawArt("bus", x - 12, y - 16, w + 24, h + 30))
+        return;
+      if (
+        o.kind === "truck" &&
+        drawArt("truck", x - 12, y - 16, w + 24, h + 28)
+      )
+        return;
+      if (
+        o.kind === "scooter" &&
+        drawArt("scooter", x - 10, y - 14, w + 20, h + 26)
+      )
+        return;
+      if (
+        o.kind === "erickshaw" &&
+        drawArt("erickshaw", x - 10, y - 14, w + 20, h + 26)
+      )
+        return;
+      if (o.kind === "cow" && drawArt("cow", x - 12, y - 16, w + 24, h + 30))
+        return;
+      if (
+        o.kind === "pothole" &&
+        drawArt("pothole", x - 12, y - 10, w + 24, h + 22)
+      )
+        return;
+      if (
+        o.kind === "barricade" &&
+        drawArt("barricade", x - 12, y - 14, w + 24, h + 26)
+      )
+        return;
     }
 
     if (o.kind === "sweep") {
@@ -1243,7 +1443,8 @@
       ctx.fillText("TRUCK", x + w / 2, y + 36);
       // grill lines
       ctx.fillStyle = "rgba(0,0,0,0.25)";
-      for (let i = 0; i < 4; i++) ctx.fillRect(x + 14, y + h - 34 + i * 6, w - 28, 3);
+      for (let i = 0; i < 4; i++)
+        ctx.fillRect(x + 14, y + h - 34 + i * 6, w - 28, 3);
     } else if (o.kind === "cow") {
       ctx.fillStyle = palette.cow;
       drawRoundedRect(x, y + 14, w, h - 14, 18);
@@ -1264,19 +1465,36 @@
     } else if (o.kind === "pothole") {
       ctx.fillStyle = palette.pot;
       ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h / 2 + 8, w * 0.46, h * 0.32, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        x + w / 2,
+        y + h / 2 + 8,
+        w * 0.46,
+        h * 0.32,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.strokeStyle = "rgba(255,255,255,0.10)";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h / 2 + 8, w * 0.44, h * 0.30, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        x + w / 2,
+        y + h / 2 + 8,
+        w * 0.44,
+        h * 0.3,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
     } else if (o.kind === "barricade") {
       ctx.fillStyle = palette.barricade;
       drawRoundedRect(x, y + 10, w, h - 10, 12);
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.14)";
-      for (let i = 0; i < 3; i++) ctx.fillRect(x + 10 + i * 16, y + 24 + i * 10, w - 20, 7);
+      for (let i = 0; i < 3; i++)
+        ctx.fillRect(x + 10 + i * 16, y + 24 + i * 10, w - 20, 7);
       ctx.fillStyle = "rgba(0,0,0,0.55)";
       ctx.font = "900 9px ui-sans-serif, system-ui";
       ctx.textAlign = "center";
@@ -1316,7 +1534,14 @@
     ctx.fillStyle = "rgba(255,255,255,0.03)";
     for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1);
     ctx.globalCompositeOperation = "multiply";
-    const v = ctx.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, Math.max(W, H) * 0.7);
+    const v = ctx.createRadialGradient(
+      W / 2,
+      H / 2,
+      80,
+      W / 2,
+      H / 2,
+      Math.max(W, H) * 0.7,
+    );
     v.addColorStop(0, "rgba(0,0,0,0)");
     v.addColorStop(1, "rgba(0,0,0,0.28)");
     ctx.fillStyle = v;
@@ -1325,12 +1550,17 @@
   }
 
   function drawPickup(p) {
-    const x = p.x, y = p.y, w = p.w, h = p.h;
+    const x = p.x,
+      y = p.y,
+      w = p.w,
+      h = p.h;
 
     // SVG art render path (fallback to shapes below)
     if (Art.ready) {
-      if (p.kind === "coin" && drawArt("coin", x - 10, y - 10, w + 20, h + 20)) return;
-      if (p.kind === "chai" && drawArt("chai", x - 10, y - 10, w + 20, h + 20)) return;
+      if (p.kind === "coin" && drawArt("coin", x - 10, y - 10, w + 20, h + 20))
+        return;
+      if (p.kind === "chai" && drawArt("chai", x - 10, y - 10, w + 20, h + 20))
+        return;
     }
 
     if (p.kind === "coin") {
@@ -1342,28 +1572,44 @@
 
       ctx.fillStyle = palette.coin;
       ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h / 2, w * 0.46 + wob, h * 0.40, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        x + w / 2,
+        y + h / 2,
+        w * 0.46 + wob,
+        h * 0.4,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.45)";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h / 2, w * 0.34 + wob, h * 0.28, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        x + w / 2,
+        y + h / 2,
+        w * 0.34 + wob,
+        h * 0.28,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
     } else if (p.kind === "magnet") {
       // magnet icon (simple)
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h - 4, w * 0.40, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + w / 2, y + h - 4, w * 0.4, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.lineWidth = 6;
       ctx.strokeStyle = "rgba(88,248,255,0.92)";
       ctx.beginPath();
-      ctx.arc(x + w / 2, y + h / 2, w * 0.28, Math.PI * 0.10, Math.PI * 0.90);
+      ctx.arc(x + w / 2, y + h / 2, w * 0.28, Math.PI * 0.1, Math.PI * 0.9);
       ctx.stroke();
       ctx.strokeStyle = "rgba(255,79,216,0.86)";
       ctx.beginPath();
-      ctx.arc(x + w / 2, y + h / 2, w * 0.28, Math.PI * 1.10, Math.PI * 1.90);
+      ctx.arc(x + w / 2, y + h / 2, w * 0.28, Math.PI * 1.1, Math.PI * 1.9);
       ctx.stroke();
 
       ctx.fillStyle = "rgba(255,255,255,0.80)";
@@ -1375,7 +1621,7 @@
       // chai cup
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.beginPath();
-      ctx.ellipse(x + w / 2, y + h - 4, w * 0.40, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + w / 2, y + h - 4, w * 0.4, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = "rgba(255,255,255,0.88)";
@@ -1395,13 +1641,17 @@
   function drawParticles() {
     for (const p of particles) {
       const a = 1 - p.t / p.life;
-      ctx.fillStyle = p.color.replace(")", `,${clamp(a,0,1)})`).replace("rgba(", "rgba(");
+      ctx.fillStyle = p.color
+        .replace(")", `,${clamp(a, 0, 1)})`)
+        .replace("rgba(", "rgba(");
       // if already rgba(...) we keep, otherwise just use p.color
-      ctx.fillStyle = p.color.includes("rgba") ? p.color.replace(/rgba\(([^)]+)\)/, (m, inside) => {
-        const parts = inside.split(",").map(s => s.trim());
-        if (parts.length === 4) parts[3] = String(clamp(a,0,1));
-        return `rgba(${parts.join(",")})`;
-      }) : p.color;
+      ctx.fillStyle = p.color.includes("rgba")
+        ? p.color.replace(/rgba\(([^)]+)\)/, (m, inside) => {
+            const parts = inside.split(",").map((s) => s.trim());
+            if (parts.length === 4) parts[3] = String(clamp(a, 0, 1));
+            return `rgba(${parts.join(",")})`;
+          })
+        : p.color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fill();
@@ -1417,8 +1667,8 @@
       ctx.strokeStyle = palette.rain;
       ctx.lineWidth = 2;
       for (let i = 0; i < 60; i++) {
-        const x = (i * 31 + State.t * 680) % (W + 60) - 30;
-        const y = (i * 47 + State.t * 920) % (H + 80) - 80;
+        const x = ((i * 31 + State.t * 680) % (W + 60)) - 30;
+        const y = ((i * 47 + State.t * 920) % (H + 80)) - 80;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x - 10, y + 22);
@@ -1432,7 +1682,7 @@
       ctx.fillStyle = `rgba(255,59,59,${0.14 + 0.12 * f})`;
       ctx.fillRect(0, 0, W, 10);
       ctx.fillRect(0, 0, 10, H);
-      ctx.fillStyle = `rgba(88,248,255,${0.12 + 0.10 * (1 - f)})`;
+      ctx.fillStyle = `rgba(88,248,255,${0.12 + 0.1 * (1 - f)})`;
       ctx.fillRect(0, H - 10, W, 10);
       ctx.fillRect(W - 10, 0, 10, H);
     }
@@ -1442,7 +1692,12 @@
       for (let i = 0; i < 46; i++) {
         const x = (i * 39 + State.t * 140) % W;
         const y = (i * 71 + State.t * 240) % H;
-        ctx.fillStyle = i % 3 === 0 ? "rgba(255,79,216,0.35)" : i % 3 === 1 ? "rgba(255,210,74,0.35)" : "rgba(69,255,154,0.35)";
+        ctx.fillStyle =
+          i % 3 === 0
+            ? "rgba(255,79,216,0.35)"
+            : i % 3 === 1
+              ? "rgba(255,210,74,0.35)"
+              : "rgba(69,255,154,0.35)";
         ctx.beginPath();
         ctx.arc(x, y, 2.3, 0, Math.PI * 2);
         ctx.fill();
@@ -1481,7 +1736,12 @@
 
     // event label
     if (State.event) {
-      const label = State.event.type === "rain" ? "MONSOON MODE" : State.event.type === "vip" ? "VIP CONVOY" : "FESTIVAL TRAFFIC";
+      const label =
+        State.event.type === "rain"
+          ? "MONSOON MODE"
+          : State.event.type === "vip"
+            ? "VIP CONVOY"
+            : "FESTIVAL TRAFFIC";
       ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.fillRect(W - 170, 10, 156, 22);
       ctx.fillStyle = "rgba(255,255,255,0.88)";
@@ -1563,12 +1823,15 @@
     // Show mobile controls only when media query matches (CSS does visibility; here for semantics)
     const mq = window.matchMedia("(max-width: 640px)");
     const syncMobile = () => {
-      $mobileControls.setAttribute("aria-hidden", mq.matches ? "false" : "true");
+      $mobileControls.setAttribute(
+        "aria-hidden",
+        mq.matches ? "false" : "true",
+      );
     };
     mq.addEventListener?.("change", syncMobile);
     syncMobile();
 
-    toast("Ready. Delhi awaits.");
+    toast("Ready.  awaits.");
     requestAnimationFrame(tick);
   }
 
